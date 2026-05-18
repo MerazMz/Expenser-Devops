@@ -73,11 +73,20 @@ export function exportToExcel(expenses: ExpenseData[], monthStr: string, monthly
   // WebView Detection
   const isAndroidWebView = typeof navigator !== 'undefined' && navigator.userAgent.includes('EXPENSER_ANDROID_WEBVIEW');
 
-  if (isAndroidWebView && (window as any).Android) {
+  interface AndroidWebViewWindow extends Window {
+    Android?: {
+      downloadBase64File: (base64: string | ArrayBuffer | null, type: string, filename: string) => void;
+    };
+  }
+
+  const customWindow = window as unknown as AndroidWebViewWindow;
+  const android = customWindow.Android;
+
+  if (isAndroidWebView && android) {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result;
-      (window as any).Android.downloadBase64File(base64, blob.type, fileName);
+      android.downloadBase64File(base64, blob.type, fileName);
     };
     reader.readAsDataURL(blob);
   } else {
