@@ -20,19 +20,7 @@ The application uses environment variables for database connections, JWT signing
 Create a file named **`.env.local`** at the project root. Paste your production-ready secrets inside:
 
 ```env
-# MongoDB Atlas Connection String
-MONGODB_URI=mongodb+srv://merazhaque74663_db_user:MerajHaque74663@expenser.o0d2wjo.mongodb.net/?appName=Expenser
 
-# JWT Signing Secret
-JWT_SECRET=super-secret-key-123-change-this-in-prod
-
-# Firebase Client configuration (Required for Google Auth & client-side components)
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBnEmRw4blB4Y7SnY4NRxO-731ia3E5iV8
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=expenseee-saver.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=expenseee-saver
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=expenseee-saver.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=170130520249
-NEXT_PUBLIC_FIREBASE_APP_ID=1:170130520249:web:e9d5d5d96daf1e2d7e8368
 ```
 
 > [!WARNING]
