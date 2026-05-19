@@ -15,3 +15,5 @@ yarn-error.log*
 .npm
 Dockerfile
 docker-compose.yml
+docker-compose.monitoring.yml
+monitoring

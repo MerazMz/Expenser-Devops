@@ -1,0 +1,35 @@
+# Prometheus Configuration for Expenser Monitoring Stack
+# Scrapes metrics from the Next.js app, cAdvisor, and Node Exporter
+
+global:
+  scrape_interval: 15s      # How often to scrape targets
+  evaluation_interval: 15s  # How often to evaluate rules
+  scrape_timeout: 10s       # Timeout per scrape
+
+scrape_configs:
+  # 1. Next.js Application Metrics
+  # Scrapes /api/metrics from the Expenser app
+  - job_name: "expenser-app"
+    metrics_path: "/api/metrics"
+    static_configs:
+      - targets: ["expenser-app:5000"]
+        labels:
+          app: "expenser"
+          environment: "production"
+
+  # 2. cAdvisor - Docker Container Metrics
+  # Provides CPU, memory, network, disk for each container
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+
+  # 3. Node Exporter - Host System Metrics
+  # Provides system-level CPU, RAM, disk, network, load average
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # 4. Prometheus Self-Monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

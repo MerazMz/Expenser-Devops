@@ -1,0 +1,132 @@
+# =============================================================================
+# Monitoring & Observability Stack for Expenser
+# =============================================================================
+# USAGE:
+#   Run alongside the main app:
+#     docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+#
+#   Run monitoring only (app already running):
+#     docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d prometheus grafana cadvisor node-exporter loki promtail
+#
+#   Stop monitoring only (keep app running):
+#     docker compose -f docker-compose.monitoring.yml down
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Prometheus - Metrics Collection & Storage
+  # Scrapes /api/metrics from the app, cAdvisor, and Node Exporter
+  # Access: http://localhost:9090
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: expenser-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Grafana - Visualization & Dashboards
+  # Access: http://localhost:3001 (admin / admin)
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: expenser-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # cAdvisor - Docker Container Metrics
+  # Monitors CPU, memory, network, disk for all running containers
+  # Access: http://localhost:8080
+  # ---------------------------------------------------------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: expenser-cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Node Exporter - Host System Metrics
+  # Monitors system CPU, RAM, disk, network, load average
+  # Access: http://localhost:9100/metrics
+  # ---------------------------------------------------------------------------
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: expenser-node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Loki - Log Aggregation Backend
+  # Stores logs shipped by Promtail, queryable via Grafana
+  # ---------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: expenser-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Promtail - Log Collector & Shipper
+  # Collects Docker container logs and ships them to Loki
+  # ---------------------------------------------------------------------------
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: expenser-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+# Named volumes for data persistence across restarts
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  loki-data:
+    driver: local
