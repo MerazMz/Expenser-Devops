@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
 const ALLOWED_DOMAINS = ["@gmail.com", "@lpu.in", "@yahoo.com", "@outlook.com"];
@@ -48,9 +48,13 @@ export async function signup(formData: any) {
 
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
     
+    const isProduction = process.env.NODE_ENV === "production";
+    const host = (await headers()).get("host") || "";
+    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+
     (await cookies()).set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction && !isLocalhost,
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",
     });
@@ -89,9 +93,13 @@ export async function syncGoogleUser(userData: any) {
     // Create JWT for Google user to unify session
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
     
+    const isProduction = process.env.NODE_ENV === "production";
+    const host = (await headers()).get("host") || "";
+    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+
     (await cookies()).set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction && !isLocalhost,
       maxAge: 30 * 24 * 60 * 60,
       path: "/",
     });
@@ -118,9 +126,13 @@ export async function login(formData: any) {
 
     const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
 
+    const isProduction = process.env.NODE_ENV === "production";
+    const host = (await headers()).get("host") || "";
+    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+
     (await cookies()).set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction && !isLocalhost,
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: "/",
     });

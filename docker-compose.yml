@@ -19,7 +19,8 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=${DOCKER_MONGODB_URI:-mongodb://host.docker.internal:27017/expenser}
+      - JWT_SECRET=${JWT_SECRET:-}
+      - MONGODB_URI=${MONGODB_URI:-mongodb+srv://merazhaque74663_db_user:MerajHaque74663@expenser.o0d2wjo.mongodb.net/?appName=Expenser}
       - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY:-}
       - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-}
       - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-}
