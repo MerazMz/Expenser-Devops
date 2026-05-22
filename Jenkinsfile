@@ -27,9 +27,8 @@ pipeline {
         stage('Container Vulnerability Scan') {
             steps {
                 echo 'Running Trivy container scanner...'
-                // Runs Trivy; fails only if HIGH or CRITICAL level CVEs are found.
-                // We mount the Docker socket to read local image layers and bind a cache volume to make scans blazing fast.
-                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v trivy-cache:/root/.cache aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}"
+                // We add the '--ignore-unpatched' flag so we only fail on actionable items
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v trivy-cache:/root/.cache aquasec/trivy:latest image --severity HIGH,CRITICAL --ignore-unpatched --exit-code 1 ${IMAGE_NAME}"
             }
         }
 
